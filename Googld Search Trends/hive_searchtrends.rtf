@@ -1,0 +1,30 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2634
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fnil\fcharset0 HelveticaNeue;}
+{\colortbl;\red255\green255\blue255;\red220\green161\blue13;}
+{\*\expandedcolortbl;;\cssrgb\c89412\c68627\c3922;}
+\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\deftab560
+\pard\pardeftab560\slleading20\partightenfactor0
+
+\f0\fs26 \cf0 beeline -u jdbc:{\field{\*\fldinst{HYPERLINK "hive2://localhost:10000"}}{\fldrslt \cf2 hive2://localhost:10000}}\
+set hive.execution.engine=mr;\
+set hive.fetch.task.conversion=minimal;\
+use jj3707_nyu_edu;\
+\pard\pardeftab560\slleading20\pardirnatural\partightenfactor0
+\cf0 \
+\pard\pardeftab560\slleading20\partightenfactor0
+\cf0 0: jdbc:hive2://localhost:10000/> create external table w1 (case_date string, cases int)\
+. . . . . . . . . . . . . . . .> row format delimited fields terminated by ','\
+. . . . . . . . . . . . . . . .>  location '/user/jj3707_nyu_edu/case/';\
+\
+0: jdbc:hive2://localhost:10000/> create external table w2 (case_date string, anxiety double, depression double, dry_eye_syndromes double, fever double, gastroparesis double, fatigue double, insomnia double, neck_pain double, skin_condition double)\
+)\
+. . . . . . . . . . . . . . . . > row format delimited fields terminated by ','\
+. . . . . . . . . . . . . . . . > location '/user/jj3707_nyu_edu/ot2/';\
+\
+CREATE TABLE t1 AS SELECT * FROM w1 s INNer JOIN w2 p ON (s.case_date = p.case_date)\
+CREATE TABLE t1 AS SELECT s.*, p.anxiety, p.depression, p.dry_eye_syndromes, p.fever, p.gastroparesis, p.fatigue, p.insomnia, p.neck_pain, p.skin_condition FROM w1 s INNER JOIN w2 p ON (s.case_date = p.case_date)\
+\
+INSERT OVERWRITE DIRECTORY '/user/jj3707_nyu_edu/outputs/\'92 \
+row format delimited fields terminated by ','\
+SELECT * FROM t1;}

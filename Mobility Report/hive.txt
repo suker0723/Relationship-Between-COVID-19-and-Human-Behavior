@@ -1,0 +1,46 @@
+beeline -u jdbc:hive2://localhost:10000
+0: jdbc:hive2://localhost:10000> use zc2396_nyu_edu;
+0: jdbc:hive2://localhost:10000/> set hive.execution.engine=mr;
+0: jdbc:hive2://localhost:10000/> set hive.fetch.task.conversion=minimal;
+0: jdbc:hive2://localhost:10000> show tables；
+
+0: jdbc:hive2://localhost:10000> create external table covid_daily (case_dt string, report_dt string)
+0: jdbc:hive2://localhost:10000> row format delimited fields terminated by '\t'
+0: jdbc:hive2://localhost:10000> location '/user/zc2396_nyu_edu/COVID_DAILY';
+
+0: jdbc:hive2://localhost:10000> create external table covid_cmdp (case_dt string, retail_and_recreation_percent_change_from_baseline int,
+grocery_and_pharmacy_percent_change_from_baseline int,parks_percent_change_from_baseline int,transit_stations_percent_change_from_baseline int,
+workplaces_percent_change_from_baseline int,residential_percent_change_from_baseline int)
+0: jdbc:hive2://localhost:10000> row format delimited fields terminated by '\t'
+0: jdbc:hive2://localhost:10000> location '/user/zc2396_nyu_edu/Final_project';
+0: jdbc:hive2://localhost:10000> show tables;
+0: jdbc:hive2://localhost:10000> describe formatted covid_cmdp;
+
+0: jdbc:hive2://localhost:10000> CREATE TABLE covid_joined
+0: jdbc:hive2://localhost:10000> AS
+0: jdbc:hive2://localhost:10000> SELECT covid_cmdp.*, covid_daily.report_dt From covid_cmdp
+0: jdbc:hive2://localhost:10000> INNER JOIN covid_daily
+0: jdbc:hive2://localhost:10000> ON covid_cmdp.case_dt = covid_daily.case_dt;
+0: jdbc:hive2://localhost:10000> describe formatted covid_joined;
+
+0: jdbc:hive2://localhost:10000> CREATE TABLE table_csv_export_data
+ROW FORMAT DELIMITED FIELDS TERMINATED BY ','
+LINES TERMINATED BY '\n'
+STORED as textfile AS select
+'case_dt' as case_dt                                            
+,'retail_and_recreation_percent_change_from_baseline' as retail_recreation 
+,'grocery_and_pharmacy_percent_change_from_baseline' as grocery_pharmacy
+,'parks_percent_change_from_baseline' as park
+,'transit_stations_percent_change_from_baseline' as transit
+,'Workplaces_percent_change_from_baseline' as workplace
+,'Residential_percent_change_from_baseline' as residential
+,'Report_dt' as covid_num  
+
+INSERT INTO table_csv_export_data
+SELECT * FROM covid_joined;
+
+In linux:
+hadoop fs -cat hdfs://nyu-dataproc-m/user/hive/warehouse/zc2396_nyu_edu.db/table_csv_export_data/* > ~/output.csv
+
+
+
