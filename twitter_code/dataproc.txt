@@ -1,0 +1,97 @@
+hdfs dfs -put /home/wf2099_nyu_edu/RBDA RBDA
+hdfs dfs -mkdir RBDAP_RAW
+hdfs dfs -mv RBDA/raw_data_en.csv RBDAP_RAW/
+
+wf2099_nyu_edu@nyu-dataproc-m:~$ hdfs dfs -mkdir RBDAP_Single
+wf2099_nyu_edu@nyu-dataproc-m:~$ hdfs dfs -mkdir RBDAP_Bi
+wf2099_nyu_edu@nyu-dataproc-m:~$ hdfs dfs -mkdir RBDAP_Tri
+wf2099_nyu_edu@nyu-dataproc-m:~$ hdfs dfs -mv RBDA/terms_data.csv RBDAP_Single/
+wf2099_nyu_edu@nyu-dataproc-m:~$ hdfs dfs -mv RBDA/bigram_data.csv RBDAP_Bi/
+wf2099_nyu_edu@nyu-dataproc-m:~$ hdfs dfs -mv RBDA/trigram_data.csv RBDAP_Tri/
+
+
+```sh
+create external table twitter_raw
+(idx bigint, twitter_id bigint, post_date string, post_time string, lang string, country_code string)
+row format delimited fields terminated by ','
+location '/user/wf2099_nyu_edu/RBDAP_RAW/';
+```
+
+Create table for twitter Singlegram data.
+
+```sh
+create external table singlegram
+(idx bigint, gram string, counts bigint, post_date string)
+row format delimited fields terminated by ','
+location '/user/wf2099_nyu_edu/RBDAP_Single/';
+```
+
+Create table for twitter Bigram data.
+
+```sh
+create external table bigram
+(idx bigint, gram string, counts bigint, post_date string)
+row format delimited fields terminated by ','
+location '/user/wf2099_nyu_edu/RBDAP_Bi/';
+```
+
+Create table for twitter Trigram data.
+
+```sh
+create external table Trigram
+(idx bigint, gram string, counts bigint, post_date string)
+row format delimited fields terminated by ','
+location '/user/wf2099_nyu_edu/RBDAP_Tri/';
+```
+
+
+```sh
+presto
+
+use hive.wf2099_nyu_edu;
+
+select post_date, count(*) cnt
+from twitter_raw
+group by post_date
+order by cnt asc;
+
+select post_date, count(*) cnt
+from singlegram
+group by post_date
+order by cnt asc;
+```
+
+```sh
+
+presto
+
+use hive.wf2099_nyu_edu;
+
+CREATE TABLE top_100_grams as
+select gram, sum(counts) as counts
+from singlegram
+group by gram
+order by counts desc
+limit 100;
+
+select * from top_100_grams order by counts desc;
+
+CREATE TABLE top_100_bigrams as
+select gram, sum(counts) as counts
+from bigram
+group by gram
+order by counts desc
+limit 100;
+
+select * from top_100_bigrams order by counts desc;
+
+CREATE TABLE top_100_trigrams as
+select gram, sum(counts) as counts
+from trigram
+group by gram
+order by counts desc
+limit 100;
+
+select * from top_100_trigrams order by counts desc;
+
+```
