@@ -1,0 +1,44 @@
+beeline -u jdbc:hive2://localhost:10000
+0: jdbc:hive2://localhost:10000/> set hive.execution.engine=mr;
+0: jdbc:hive2://localhost:10000/> set hive.fetch.task.conversion=minimal;
+0: jdbc:hive2://localhost:10000> use jh7948_nyu_edu;
+0: jdbc:hive2://localhost:10000> show tables；
+
+0: jdbc:hive2://localhost:10000/> create external table covid_case(earliestdt string, sex string, age string, race string, death_yn string)
+. . . . . . . . . . . . . . . . > row format delimited fields terminated by ','
+. . . . . . . . . . . . . . . . > location '/user/jh7948_nyu_edu/hiveInput/';
+
+0: jdbc:hive2://localhost:10000/> create table case_age as
+. . . . . . . . . . . . . . . . > select age, count(*) as agenum
+. . . . . . . . . . . . . . . . > from covid_case
+. . . . . . . . . . . . . . . . > group by age
+. . . . . . . . . . . . . . . . > order by age;
+
+0: jdbc:hive2://localhost:10000/> create table death_age as
+. . . . . . . . . . . . . . . . > select age, count(*) as deathnum
+. . . . . . . . . . . . . . . . > from covid_case
+. . . . . . . . . . . . . . . . > where death_yn = 'Yes'
+. . . . . . . . . . . . . . . . > group by age
+. . . . . . . . . . . . . . . . > order by age;
+
+0: jdbc:hive2://localhost:10000/> create table case_death_age as
+. . . . . . . . . . . . . . . . > select case_age.*, death_age.deathnum
+. . . . . . . . . . . . . . . . > from case_age
+. . . . . . . . . . . . . . . . > inner join death_age
+. . . . . . . . . . . . . . . . > on case_age.age = death_age.age
+. . . . . . . . . . . . . . . . > order by age;
+
+0: jdbc:hive2://localhost:10000/> create table case_death_age_export
+. . . . . . . . . . . . . . . . > row format delimited fields terminated by ','
+. . . . . . . . . . . . . . . . > lines terminated by '\n'
+. . . . . . . . . . . . . . . . > stored as textfile as select
+. . . . . . . . . . . . . . . . > 'age' as age
+. . . . . . . . . . . . . . . . > 'casenum' as casenum
+. . . . . . . . . . . . . . . . > 'deathnum' as deathnum;
+
+0: jdbc:hive2://localhost:10000/> insert into case_death_age_export
+. . . . . . . . . . . . . . . . > select * from case_death_age;
+
+hadoop fs -cat hdfs://nyu-dataproc-m/user/hive/warehouse/jh7948_nyu_edu.db/case_death_age_export/* > ~/output_age.csv
+
+
